@@ -2,7 +2,7 @@ RORE: The Post-Web Interface Engine
 
 Whitepaper & Technical Manifesto
 
-Version: 1.0.0 – Architecture Revelation Status: Engineering Prototype / Pre-Alpha License: MIT / Apache 2.0 (Dual License) Core Stack: Rust, WGPU, Taffy, Proc-Macros, QUIC Repository: github.com/codehealth/rore (Placeholder)
+Version: 1.0.0 – Architecture Revelation Status: Engineering Prototype / Pre-Alpha License:Apache 2.0 (Dual License) Core Stack: Rust, WGPU, Taffy, Proc-Macros, QUIC Repository: https://github.com/davlatov-tech/Rore (Umidjon)
 
 1. Executive Summary
 
