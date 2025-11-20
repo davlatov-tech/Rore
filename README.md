@@ -21,17 +21,84 @@
 | **Build** | Dependency Hell | **`rore run android`** |                          
 
 
-## Example Syntax (DSL)
+## Example Syntax (DSL) UI
 
-```rust
-ui! {
-    Column {
-        padding: 20
-        center_content
+``` #[component]
+fn ProductCard() -> View {
+    ui! {
+        // --- OUTER CONTAINER (Div equivalent) ---
+        Column {
+            // 1. Appearance (CSS logic inside Style block)
+            style: {
+                background: Color::rgb(240, 240, 240), // #f0f0f0
+                padding: 20,
+                radius: 12,
+                gap: 15, // Spacing between elements
+            },
 
-        Text(f"Hello Rore") -> size(32), bold, color(Blue)
-        
-        Button("Click Me") 
-            -> on_click(move |_| println!("Clicked!"))
+            // 2. Inner Elements (HTML structure)
+            children: [
+                Text {
+                    content: "MacBook Pro",
+                    style: {
+                        size: 24,
+                        weight: Bold,
+                        color: Black,
+                    }
+                },
+
+                Button {
+                    content: "Buy Now",
+                    
+                    // Button specific styling
+                    style: {
+                        background: Blue,
+                        color: White,
+                        padding: [10, 20], // [Vertical, Horizontal]
+                    },
+
+                    // 3. Logic (JS equivalent - Actions)
+                    on_click: move |_| {
+                        println!("Item Purchased!");
+                        // Triggering a service action:
+                        // Services::cart().add(current_item_id);
+                    }
+                }
+            ]
+        }
+    }
+}
+
+
+
+
+
+### Rore script
+
+fn main() {
+    // Define server address once on app startup.
+    // This initializes the persistent connection pool.
+    Rore::connect("https://api.myshop.com");
+
+    // Start rendering the application
+    Rore::run(App);
+}
+
+async fn handle_login(email: &str, pass: &str) {
+    // Note: No URL, No JSON parsing.
+    // "Backend" acts as a type-safe proxy to your server code.
+    
+    let result = Backend::Auth::login(email, pass).await;
+
+    match result {
+        Ok(user) => {
+            println!("Welcome back, {}", user.name);
+            // Navigate to the next screen
+            Navigator::push(HomeScreen);
+        },
+        Err(error) => {
+            // Handle specific errors from server (e.g., "Invalid Password")
+            println!("Login Error: {}", error.message);
+        }
     }
 }
