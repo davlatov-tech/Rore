@@ -1,0 +1,10 @@
+[package]
+name = "rore-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+winit.workspace = true
+wgpu.workspace = true
+taffy.workspace = true

@@ -1,0 +1,9 @@
+[package]
+name = "rore-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+clap.workspace = true
+rore-core = { path = "../rore-core" }
