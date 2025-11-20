@@ -1,5 +1,4 @@
 
-      Logo:  https://github.com/user-attachments/assets/bae93097-9eea-4981-8da2-665c85ed6ce7
 # RORE!
 
 
