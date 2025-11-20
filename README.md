@@ -1,4 +1,7 @@
-# RORE
+
+      Logo:  https://github.com/user-attachments/assets/bae93097-9eea-4981-8da2-665c85ed6ce7
+# RORE!
+
 
 **The Post-Web Interface Engine**
 
@@ -15,7 +18,8 @@
 | **Rendering** | DOM / Virtual DOM | **WGPU (Direct GPU)** |
 | **Language** | JavaScript / TS | **Rust** |
 | **Performance** | Heavy (WebView) | **Native (120 FPS)** |
-| **Build** | Dependency Hell | **`rore run android`** |
+| **Build** | Dependency Hell | **`rore run android`** |                          
+
 
 ## Example Syntax (DSL)
 
