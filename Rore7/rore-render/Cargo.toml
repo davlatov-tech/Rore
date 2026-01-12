@@ -1,0 +1,20 @@
+[package]
+name = "rore-render"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Grafik dvigatel
+wgpu = "0.19"
+pollster = "0.3"
+bytemuck = { version = "1.14", features = ["derive"] }
+winit = "0.29"
+log = "0.4"
+glam = "0.25"
+image = { version = "0.24", default-features = false, features = ["png", "jpeg"] }
+
+# YANGI: Matn Dvigateli
+# Glyphon o'z ichiga cosmic-text ni oladi va wgpu bilan ishlaydi
+glyphon = "0.5" 
+
+rore-types = { path = "../rore-types" }

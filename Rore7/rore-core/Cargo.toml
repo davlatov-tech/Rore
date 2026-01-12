@@ -1,0 +1,19 @@
+[package]
+name = "rore-core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+winit = "0.29"
+env_logger = "0.10"
+log = "0.4"
+pollster = "0.3"
+wgpu = "0.19"
+# MUHIM: Versiya 0.24 bo'lishi shart (rore-render bilan moslashish uchun)
+glam = "0.25" 
+taffy = "0.3.19" 
+arboard = "3.3"
+# Bizning modullar
+rore-types = { path = "../rore-types" }
+rore-render = { path = "../rore-render" }
+rore-layout = { path = "../rore-layout" }

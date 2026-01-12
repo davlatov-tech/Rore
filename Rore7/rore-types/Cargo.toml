@@ -1,0 +1,8 @@
+[package]
+name = "rore-types"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Hozircha hech qanday tashqi kutubxona kerak emas.
+# Bu modul "Pure Rust" bo'lib qoladi.

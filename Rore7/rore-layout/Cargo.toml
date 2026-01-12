@@ -1,0 +1,15 @@
+[package]
+name = "rore-layout"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Layout Dvigateli
+taffy = "0.3"
+
+# Bizning turlar
+rore-types = { path = "../rore-types" }
+
+# Log chiqarish
+log = "0.4"
+glam = "0.25"
