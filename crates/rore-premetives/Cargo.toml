@@ -1,7 +1,0 @@
-[package]
-name = "rore-primitives"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-# Hozircha bo'sh, chunki rore-primitives tashqi kutubxonalarsiz ishlaydi
