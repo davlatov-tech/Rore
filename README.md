@@ -73,4 +73,4 @@ While the architecture is highly stable, some system-level adaptations are curre
 | **Reactivity (Signal Update)** | Microseconds | No DOM, no VDOM. Binds directly to the components. |
 
 ---
-
+**Note; Rore is not yet ready to build a fully functional application. Aplha stage
