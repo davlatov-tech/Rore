@@ -20,7 +20,7 @@
 | **Memory** | from 350+ RAM  | **`110-150 MB RAM** |                          
 
 
-
+[**Demo video and screenshot**](docs/Rore-demo1.mp4)   *download video and show*
 
  #  Current Status: Rore UI Framework
 
