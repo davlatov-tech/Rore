@@ -1,0 +1,15 @@
+[package]
+name = "rore-library"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# O'zimizning Yadro va turlarimiz
+rore-core = { path = "../rore-core" }
+rore-layout = { path = "../rore-layout" }
+rore-types = { path = "../rore-types" }
+rore-text = { path = "../rore-text" }
+# Tashqi kutubxonalar (Yadroda qaysi versiya bo'lsa shuni ishlatadi, "*" orqali avtomat topadi)
+glam = "*"
+winit = "*"
+rore-render = { path = "../rore-render" }

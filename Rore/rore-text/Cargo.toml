@@ -1,0 +1,16 @@
+[package]
+name = "rore-text"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rore-types = { path = "../rore-types" }
+rore-layout = { path = "../rore-layout" } # Yangi qo'shildi
+rore-render = { path = "../rore-render" } # Yangi qo'shildi
+rore-core = { path = "../rore-core" }     # Yangi qo'shildi
+glyphon = "0.5"
+glam = "0.25"
+wgpu = "0.19"
+cursor-icon = "1.2.0"
+winit= "0.29"
+bytemuck = { version = "1.14", features = ["derive"] }

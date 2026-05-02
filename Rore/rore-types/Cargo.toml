@@ -1,0 +1,9 @@
+[package]
+name = "rore-types"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# ... (sizdagi eskidan bor kutubxonalar qolaversin)
+glam = "0.25"
+wgpu = "0.19" # Dvigatel ishlatayotgan aniq versiyani yozing (masalan 0.19 yoki 0.20)

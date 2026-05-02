@@ -1,0 +1,15 @@
+[package]
+name = "rore-kit"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rore-types = { path = "../rore-types" }
+rore-layout = { path = "../rore-layout" }
+rore-core = { path = "../rore-core" }
+rore-render = { path = "../rore-render" }
+glam = "0.25"
+
+# --- YANGI: SVG Dvigateli ---
+resvg = "0.44"    # SVG ni render qilish uchun
+tiny-skia = "0.11" # Pixel buffer bilan ishlash uchun
