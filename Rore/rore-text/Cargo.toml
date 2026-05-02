@@ -5,9 +5,9 @@ edition = "2021"
 
 [dependencies]
 rore-types = { path = "../rore-types" }
-rore-layout = { path = "../rore-layout" } # Yangi qo'shildi
-rore-render = { path = "../rore-render" } # Yangi qo'shildi
-rore-core = { path = "../rore-core" }     # Yangi qo'shildi
+rore-layout = { path = "../rore-layout" } 
+rore-render = { path = "../rore-render" }
+rore-core = { path = "../rore-core" }     
 glyphon = "0.5"
 glam = "0.25"
 wgpu = "0.19"
