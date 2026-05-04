@@ -8,6 +8,15 @@
 
 **Rore** is a high-performance, GPU-accelerated UI framework built entirely in Rust. Specially optimized for high-end and heavy desktop application development. Cross-platform performance based on the pixel-first concept.
 
+***
+
+
+<div align="center">
+ 
+https://github.com/user-attachments/assets/d3c12cbc-0d92-401a-8ce8-4eafdbbbc2d9
+
+</div>
+
 [ **Read the Architectural docs**](docs/WHITEPAPER.md)
 
 ## Why Rore?
