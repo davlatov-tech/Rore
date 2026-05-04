@@ -4,7 +4,7 @@
 
 **Rore - The High-Performance, Zero-VDOM UI Engine for Rust**
 
- "Rendering heavy Data-Grids and Web3 Terminals at ~130MB RAM and ~3% CPU. No Electron bloat. Pure WGPU & Rust."
+ "Rendering heavy Data-Grids and Web3 Terminals at ~130MB RAM and ~2% CPU. No Electron bloat. Pure WGPU & Rust."
 
 **Rore** is a high-performance, GPU-accelerated UI framework built entirely in Rust. Specially optimized for high-end and heavy desktop application development. Cross-platform performance based on the pixel-first concept.
 
@@ -29,6 +29,11 @@
  cd Rore/Rore
 cargo run --release
  ```
+### How to use examples.
+1. copy any code from examples folder
+2. paste full code in main.rs
+3. run code
+
 ---
 
  #  Current Status: Rore UI Framework
