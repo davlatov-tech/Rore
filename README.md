@@ -22,6 +22,15 @@
 
 ## [**Demo video and screenshot**](docs/Rore-demo1.mp4)   *download video and show*
 
+---
+### easy to try:
+ ``` 
+ git clone https://github.com/davlatov-tech/Rore.git 
+ cd Rore/Rore
+cargo run --release
+ ```
+---
+
  #  Current Status: Rore UI Framework
 
 **Rore** is an ultra-fast, reactive, and hardware-accelerated UI framework written in Rust, powered by the WGPU engine and Taffy (Flexbox) layout system. This document outlines the current technical status, core achievements, and future roadmap of the project.
