@@ -1,0 +1,348 @@
+use std::cell::RefCell;
+
+use rore_core::app::{run, App, AppEvent, Widget};
+use rore_core::reactive::signals::{create_selector, create_ticker, provide_context, Signal};
+use rore_text::text::TextSystem;
+use rore_text::widgets::theme::Theme;
+use rore_text::widgets::{Text, UiBox};
+use rore_types::{Align, Color, FlexDirection, RoreConfig, Size, Style, Thickness, Val};
+
+thread_local! {
+    static SCREEN_SIZE: RefCell<(f32, f32)> = RefCell::new((1024.0, 768.0));
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct OrderRow {
+    pub price: f32,
+    pub amount: f32,
+    pub total: f32,
+}
+
+// =========================================================================
+// ASOSIY ILOVA
+// =========================================================================
+struct MultiGridApp {}
+
+impl App for MultiGridApp {
+    fn view(&self) -> Box<dyn Widget> {
+        let theme_signal = Signal::new(Theme::dark());
+        provide_context(theme_signal);
+
+        // 1. MA'LUMOTLARNI YARATISH (Qatorlar soni 10 taga tushirildi)
+        let (btc_asks, btc_bids) = generate_order_book(68100.50, 2.5);
+        let (eth_asks, eth_bids) = generate_order_book(3540.25, 0.5);
+        let (sol_asks, sol_bids) = generate_order_book(145.80, 0.05);
+
+        let sig_btc_asks = Signal::new(btc_asks);
+        let sig_btc_bids = Signal::new(btc_bids);
+        let sig_eth_asks = Signal::new(eth_asks);
+        let sig_eth_bids = Signal::new(eth_bids);
+        let sig_sol_asks = Signal::new(sol_asks);
+        let sig_sol_bids = Signal::new(sol_bids);
+
+        // 2. SIMULYATSIYA TAYMERI
+        let mut frame_count = 0;
+        let mut rng = 12345u32;
+
+        create_ticker(move |_dt| {
+            frame_count += 1;
+            if frame_count % 4 == 0 {
+                update_book(&sig_btc_asks, &sig_btc_bids, &mut rng, 2.5);
+                update_book(&sig_eth_asks, &sig_eth_bids, &mut rng, 0.5);
+                update_book(&sig_sol_asks, &sig_sol_bids, &mut rng, 0.05);
+            }
+        });
+
+        // 3. UI KOMPOZITSIYASI
+        Box::new(
+            UiBox::new()
+                .bg_color(Color::hex("#0B0E11"))
+                .style(Style {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(100.0),
+                    flex_direction: FlexDirection::Column,
+                    ..Default::default()
+                })
+                .child(
+                    UiBox::new()
+                        .bg_color(Color::hex("#181A20"))
+                        .style(Style {
+                            width: Val::Percent(100.0),
+                            height: Val::Px(50.0),
+                            flex_direction: FlexDirection::Row,
+                            align_items: Align::Center,
+                            padding: Thickness {
+                                left: Val::Px(24.0),
+                                ..Default::default()
+                            },
+                            ..Default::default()
+                        })
+                        .child(
+                            Text::new("RORE MARKET DATA")
+                                .size(18.0)
+                                .color(Color::hex("#FCD535")),
+                        ),
+                )
+                .child(
+                    UiBox::new()
+                        .style(Style {
+                            flex_grow: 1.0,
+                            width: Val::Percent(100.0),
+                            flex_direction: FlexDirection::Row,
+                            gap: Size {
+                                width: 4.0,
+                                height: 0.0,
+                            },
+                            padding: Thickness::all(Val::Px(4.0)),
+                            ..Default::default()
+                        })
+                        .child(build_crypto_grid("BTC / USDT", sig_btc_asks, sig_btc_bids))
+                        .child(build_crypto_grid("ETH / USDT", sig_eth_asks, sig_eth_bids))
+                        .child(build_crypto_grid("SOL / USDT", sig_sol_asks, sig_sol_bids)),
+                ),
+        )
+    }
+
+    fn update(&mut self, event: AppEvent) {
+        if let AppEvent::Resize(w, h) = event {
+            SCREEN_SIZE.with(|s| *s.borrow_mut() = (w, h));
+        }
+    }
+}
+
+// =========================================================================
+// MANTIQIY FUNKSIYALAR
+// =========================================================================
+
+fn generate_order_book(base_price: f32, step_size: f32) -> (Vec<OrderRow>, Vec<OrderRow>) {
+    let mut asks = Vec::new();
+    let mut bids = Vec::new();
+    // MUHIM: 14 tadan 10 taga tushirildi, shunda ekranga mukammal sig'adi
+    for i in 0..10 {
+        let step = (i as f32 + 1.0) * step_size;
+        let ask_p = base_price + step;
+        let bid_p = base_price - step;
+
+        let amount = 1.0 + (i as f32 * 0.1);
+        asks.push(OrderRow {
+            price: ask_p,
+            amount,
+            total: ask_p * amount,
+        });
+        bids.push(OrderRow {
+            price: bid_p,
+            amount,
+            total: bid_p * amount,
+        });
+    }
+    asks.reverse();
+    (asks, bids)
+}
+
+fn update_book(
+    asks: &Signal<Vec<OrderRow>>,
+    bids: &Signal<Vec<OrderRow>>,
+    rng: &mut u32,
+    step_size: f32,
+) {
+    asks.update(|a| {
+        for row in a.iter_mut() {
+            *rng = rng.wrapping_mul(1103515245).wrapping_add(12345);
+            let noise_amt = ((*rng % 200) as f32 / 100.0) - 1.0;
+            let noise_price = (((*rng >> 8) % 100) as f32 / 100.0 - 0.5) * (step_size * 0.2);
+
+            row.price = (row.price + noise_price).max(0.01);
+            row.amount = (row.amount + noise_amt * 0.05).max(0.01);
+            row.total = row.price * row.amount;
+        }
+    });
+
+    bids.update(|b| {
+        for row in b.iter_mut() {
+            *rng = rng.wrapping_mul(1103515245).wrapping_add(12345);
+            let noise_amt = ((*rng % 200) as f32 / 100.0) - 1.0;
+            let noise_price = (((*rng >> 8) % 100) as f32 / 100.0 - 0.5) * (step_size * 0.2);
+
+            row.price = (row.price + noise_price).max(0.01);
+            row.amount = (row.amount + noise_amt * 0.05).max(0.01);
+            row.total = row.price * row.amount;
+        }
+    });
+}
+
+// =========================================================================
+// MUKAMMAL DIZAYNGA EGA UI KOMPONENTLARI
+// =========================================================================
+
+fn build_crypto_grid(
+    title: &str,
+    asks: Signal<Vec<OrderRow>>,
+    bids: Signal<Vec<OrderRow>>,
+) -> impl Widget {
+    let mut container = UiBox::new()
+        .bg_color(Color::hex("#181A20"))
+        .style(Style {
+            flex_grow: 1.0,
+            height: Val::Percent(100.0),
+            flex_direction: FlexDirection::Column,
+            ..Default::default()
+        })
+        .child(
+            UiBox::new()
+                .style(Style {
+                    padding: Thickness {
+                        left: Val::Px(16.0),
+                        top: Val::Px(16.0),
+                        bottom: Val::Px(12.0),
+                        right: Val::Px(16.0),
+                    },
+                    ..Default::default()
+                })
+                .child(Text::new(title).color(Color::hex("#EAECEF")).size(18.0)),
+        )
+        .child(
+            UiBox::new()
+                .style(Style {
+                    width: Val::Percent(100.0),
+                    flex_direction: FlexDirection::Row,
+                    padding: Thickness {
+                        left: Val::Px(16.0),
+                        right: Val::Px(16.0),
+                        bottom: Val::Px(8.0),
+                        top: Val::Px(0.0),
+                    },
+                    ..Default::default()
+                })
+                .child(build_header_text("Price", Align::Start))
+                .child(build_header_text("Amount", Align::End))
+                .child(build_header_text("Total", Align::End)),
+        );
+
+    // Qizil qatorlar (10 ta)
+    for i in 0..10 {
+        let p = create_selector(asks, move |a| a.get(i).map(|r| r.price).unwrap_or(0.0));
+        let a = create_selector(asks, move |a| a.get(i).map(|r| r.amount).unwrap_or(0.0));
+        let t = create_selector(asks, move |a| a.get(i).map(|r| r.total).unwrap_or(0.0));
+        container = container.child(build_reactive_row(p, a, t, Color::hex("#F6465D")));
+    }
+
+    // O'RTADAGI JORIY NARX
+    let current_price = create_selector(bids, move |b| {
+        b.first().map(|r| r.price + 0.1).unwrap_or(0.0)
+    });
+    container = container.child(
+        UiBox::new()
+            .style(Style {
+                width: Val::Percent(100.0),
+                height: Val::Px(50.0),
+                flex_direction: FlexDirection::Column,
+                justify_content: Align::Center,
+                align_items: Align::Center,
+                ..Default::default()
+            })
+            .child(
+                Text::new(create_selector(current_price, |p| format!("{:.2}", p)))
+                    .color(Color::hex("#0ECB81"))
+                    .size(24.0),
+            ),
+    );
+
+    // Yashil qatorlar (10 ta)
+    for i in 0..10 {
+        let p = create_selector(bids, move |b| b.get(i).map(|r| r.price).unwrap_or(0.0));
+        let a = create_selector(bids, move |b| b.get(i).map(|r| r.amount).unwrap_or(0.0));
+        let t = create_selector(bids, move |b| b.get(i).map(|r| r.total).unwrap_or(0.0));
+        container = container.child(build_reactive_row(p, a, t, Color::hex("#0ECB81")));
+    }
+
+    container
+}
+
+fn build_header_text(text: &str, align: Align) -> impl Widget {
+    UiBox::new()
+        .style(Style {
+            flex_grow: 1.0,
+            flex_shrink: 0.0,
+            flex_direction: FlexDirection::Column,
+            align_items: align,
+            ..Default::default()
+        })
+        .child(Text::new(text).color(Color::hex("#B7BDC6")).size(14.0))
+}
+
+fn build_reactive_row(
+    price: Signal<f32>,
+    amount: Signal<f32>,
+    total: Signal<f32>,
+    price_color: Color,
+) -> impl Widget {
+    UiBox::new()
+        .style(Style {
+            width: Val::Percent(100.0),
+            height: Val::Px(26.0), // MUHIM: Balandlik aniq 26px qilib qotirildi
+            flex_shrink: 0.0,      // MUHIM: Taffy uni HECH QACHON siqib qo'ymaydi!
+            flex_direction: FlexDirection::Row,
+            align_items: Align::Center,
+            padding: Thickness {
+                left: Val::Px(16.0),
+                right: Val::Px(16.0),
+                top: Val::Px(0.0),
+                bottom: Val::Px(0.0),
+            },
+            ..Default::default()
+        })
+        .child(
+            UiBox::new()
+                .style(Style {
+                    flex_grow: 1.0,
+                    flex_shrink: 0.0,
+                    flex_direction: FlexDirection::Column,
+                    align_items: Align::Start,
+                    ..Default::default()
+                })
+                .child(
+                    Text::new(create_selector(price, |p| format!("{:.2}", p)))
+                        .color(price_color)
+                        .size(14.0),
+                ),
+        )
+        .child(
+            UiBox::new()
+                .style(Style {
+                    flex_grow: 1.0,
+                    flex_shrink: 0.0,
+                    flex_direction: FlexDirection::Column,
+                    align_items: Align::End,
+                    ..Default::default()
+                })
+                .child(
+                    Text::new(create_selector(amount, |a| format!("{:.4}", a)))
+                        .color(Color::WHITE)
+                        .size(14.0),
+                ),
+        )
+        .child(
+            UiBox::new()
+                .style(Style {
+                    flex_grow: 1.0,
+                    flex_shrink: 0.0,
+                    flex_direction: FlexDirection::Column,
+                    align_items: Align::End,
+                    ..Default::default()
+                })
+                .child(
+                    Text::new(create_selector(total, |t| format!("{:.2}", t)))
+                        .color(Color::hex("#B7BDC6"))
+                        .size(14.0),
+                ),
+        )
+}
+
+fn main() {
+    let renderer_factory =
+        move |device: &_, queue: &_, config: &_| -> Box<dyn rore_types::text::TextRenderer> {
+            Box::new(TextSystem::new(device, queue, config))
+        };
+
+    run(MultiGridApp {}, RoreConfig::desktop(), renderer_factory);
+}

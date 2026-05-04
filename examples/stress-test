@@ -1,0 +1,452 @@
+use glam::Vec2;
+use rore_core::app::{run, App, AppEvent, Widget};
+use rore_core::reactive::context::{create_tween, Easing};
+use rore_core::reactive::resource::create_resource;
+use rore_core::reactive::signals::{create_ticker, provide_context, Signal};
+use std::cell::RefCell;
+use std::rc::Rc;
+
+// Yadroviy Vidjetlar
+use rore_core::widgets::list::ForList;
+use rore_core::widgets::portal::Portal;
+use rore_core::widgets::show::Show;
+use rore_core::widgets::suspense::Suspense;
+
+// UI Vidjetlar
+use rore_text::text::TextSystem;
+use rore_text::widgets::router::{navigate, Router};
+use rore_text::widgets::theme::Theme;
+use rore_text::widgets::{AnimatedBox, Button, Text, TransformBox, UiBox};
+use rore_types::*;
+
+struct Particle {
+    x: Signal<f32>,
+    y: Signal<f32>,
+    vx: f32,
+    vy: f32,
+    // INQILOB: Har bir tugma o'zining dinamik kengligiga ega
+    size: Signal<Vec2>,
+}
+
+thread_local! {
+    static SCREEN_SIZE: RefCell<(f32, f32)> = RefCell::new((1024.0, 768.0));
+}
+
+struct RoreEnterpriseApp {}
+
+impl App for RoreEnterpriseApp {
+    fn view(&self) -> Box<dyn Widget> {
+        let theme_signal = Signal::new(Theme::dark());
+        provide_context(theme_signal);
+
+        Box::new(
+            UiBox::new()
+                .background()
+                .style(Style {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(100.0),
+                    flex_direction: FlexDirection::Column,
+                    ..Default::default()
+                })
+                .child(build_navbar(theme_signal))
+                .child(
+                    UiBox::new()
+                        .style(Style {
+                            flex_grow: 1.0,
+                            padding: Thickness::all(Val::Px(40.0)),
+                            ..Default::default()
+                        })
+                        .child(
+                            Router::new("/physics")
+                                .route("/home", || Box::new(build_home_page()))
+                                .route("/list", || Box::new(build_list_page()))
+                                .route("/async", || Box::new(build_async_page()))
+                                .route("/physics", || Box::new(build_physics_page())),
+                        ),
+                ),
+        )
+    }
+
+    fn update(&mut self, event: AppEvent) {
+        if let AppEvent::Resize(w, h) = event {
+            SCREEN_SIZE.with(|s| *s.borrow_mut() = (w, h));
+        }
+    }
+}
+
+fn nav_button(id: &str, label: &str, path: &str) -> Button {
+    let path_str = path.to_string();
+    Button::new(id)
+        .child(Text::new(label).color(Color::WHITE))
+        .corner_radius(8.0)
+        .style(Style {
+            padding: Thickness {
+                left: Val::Px(15.0),
+                right: Val::Px(15.0),
+                top: Val::Px(10.0),
+                bottom: Val::Px(10.0),
+            },
+            ..Default::default()
+        })
+        .on_click(move || navigate(&path_str))
+}
+
+fn build_navbar(theme_signal: Signal<Theme>) -> impl Widget {
+    UiBox::new()
+        .surface()
+        .style(Style {
+            width: Val::Percent(100.0),
+            height: Val::Px(70.0),
+            flex_direction: FlexDirection::Row,
+            align_items: Align::Center,
+            padding: Thickness {
+                left: Val::Px(30.0),
+                right: Val::Px(30.0),
+                ..Default::default()
+            },
+            gap: Size {
+                width: 15.0,
+                height: 0.0,
+            },
+            ..Default::default()
+        })
+        .child(Text::new("RORE V1").size(24.0))
+        .child(nav_button("btn_home", "Asosiy", "/home"))
+        .child(nav_button("btn_list", "Ro'yxat", "/list"))
+        .child(nav_button("btn_async", "Suspense", "/async"))
+        .child(nav_button("btn_physics", "Fizika (60 FPS)", "/physics"))
+        .child(UiBox::new().style(Style {
+            flex_grow: 1.0,
+            ..Default::default()
+        }))
+        .child(
+            Button::new("btn_theme")
+                .child(Text::new("🌗 Tema").color(Color::WHITE))
+                .corner_radius(8.0)
+                .style(Style {
+                    padding: Thickness::all(Val::Px(10.0)),
+                    ..Default::default()
+                })
+                .colors(
+                    Color::hex("#8b5cf6"),
+                    Color::hex("#a78bfa"),
+                    Color::hex("#7c3aed"),
+                )
+                .on_click(move || {
+                    let is_dark = theme_signal.get_untracked() == Theme::dark();
+                    theme_signal.set(if is_dark {
+                        Theme::light()
+                    } else {
+                        Theme::dark()
+                    });
+                }),
+        )
+}
+
+fn build_physics_page() -> impl Widget {
+    let mut rng_seed: u32 = 12345;
+    let mut p = Vec::new();
+
+    let (sw, sh) = SCREEN_SIZE.with(|s| *s.borrow());
+    let safe_w = (sw as u32).saturating_sub(150).max(1);
+    let safe_h = (sh as u32).saturating_sub(200).max(1);
+
+    for _ in 0..50 {
+        rng_seed = rng_seed.wrapping_mul(1103515245).wrapping_add(12345);
+        let start_x = (rng_seed % safe_w) as f32;
+
+        rng_seed = rng_seed.wrapping_mul(1103515245).wrapping_add(12345);
+        let start_y = (rng_seed % safe_h) as f32;
+
+        rng_seed = rng_seed.wrapping_mul(1103515245).wrapping_add(12345);
+        let vx = ((rng_seed % 100) as f32 - 50.0) * 8.0;
+
+        rng_seed = rng_seed.wrapping_mul(1103515245).wrapping_add(12345);
+        let vy = ((rng_seed % 100) as f32 - 50.0) * 8.0;
+
+        p.push(Particle {
+            x: Signal::new(start_x),
+            y: Signal::new(start_y),
+            vx,
+            vy,
+            // Boshlang'ich taxminiy o'lcham (Taffy uni darhol haqiqiysiga almashtiradi)
+            size: Signal::new(Vec2::new(80.0, 50.0)),
+        });
+    }
+
+    let particles = Rc::new(RefCell::new(p));
+    let p_clone = particles.clone();
+
+    create_ticker(move |dt| {
+        let (sw, sh) = SCREEN_SIZE.with(|s| *s.borrow());
+        let navbar_height = 70.0;
+
+        for p in p_clone.borrow_mut().iter_mut() {
+            let mut x = p.x.get_untracked();
+            let mut y = p.y.get_untracked();
+
+            // HAR BIR TUGMA O'ZINING HAQIQIY O'LCHAMINI O'QIYDI!
+            let size = p.size.get_untracked();
+
+            let max_x = (sw - size.x).max(0.0);
+            let max_y = (sh - navbar_height - size.y).max(0.0);
+
+            x += p.vx * dt;
+            y += p.vy * dt;
+
+            // Mukammal Dinamik To'qnashuv
+            if x < 0.0 {
+                x = 0.0;
+                p.vx *= -1.0;
+            } else if x > max_x {
+                x = max_x;
+                p.vx *= -1.0;
+            }
+
+            if y < 0.0 {
+                y = 0.0;
+                p.vy *= -1.0;
+            } else if y > max_y {
+                y = max_y;
+                p.vy *= -1.0;
+            }
+
+            p.x.set(x);
+            p.y.set(y);
+        }
+    });
+
+    let mut container = UiBox::new().style(Style {
+        width: Val::Percent(100.0),
+        height: Val::Percent(100.0),
+        ..Default::default()
+    });
+
+    container = container.child(
+        Text::new(
+            "MUHANDISLIK CHO'QQISI: Fizika dvigateli endi har bir tugmaning haqiqiy Layout (Taffy) o'lchamini signal orqali biladi!",
+        )
+        .size(20.0)
+        .color(Color::hex("#10b981")),
+    );
+
+    for (i, p) in particles.borrow().iter().enumerate() {
+        // Dinamik to'qnashuv ishlayotganini isbotlash uchun turli xil matnlar!
+        let label = if i % 5 == 0 {
+            format!("Juda Uzun Matnli Tugma #{}", i)
+        } else {
+            format!("B-{}", i)
+        };
+
+        container = container.child(
+            TransformBox::new(p.x, p.y)
+                .on_size(p.size) // INQILOB: Taffy o'lchamni shu signalga yozib beradi
+                .style(Style {
+                    position: Position::Absolute,
+                    inset: Thickness {
+                        left: Val::Px(0.0),
+                        top: Val::Px(0.0),
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                })
+                .child(
+                    Button::new(&format!("fly_btn_{}", i))
+                        .child(Text::new(label).color(Color::WHITE))
+                        .corner_radius(20.0)
+                        .style(Style {
+                            padding: Thickness::all(Val::Px(15.0)),
+                            ..Default::default()
+                        })
+                        .on_click(move || {
+                            println!("Uchib yurgan B-{} tugmasi bosildi!", i);
+                        }),
+                ),
+        );
+    }
+
+    container
+}
+
+fn build_home_page() -> impl Widget {
+    let is_modal_open = Signal::new(false);
+    UiBox::new()
+        .style(Style {
+            flex_direction: FlexDirection::Column,
+            gap: Size {
+                width: 0.0,
+                height: 20.0,
+            },
+            ..Default::default()
+        })
+        .child(Text::new("Asosiy Sahifaga Xush Kelibsiz!").size(36.0))
+        .child(
+            Button::new("btn_open_modal")
+                .child(Text::new("🚀 Modal Oynani Ochish (Portal)").color(Color::WHITE))
+                .corner_radius(8.0)
+                .style(Style {
+                    padding: Thickness::all(Val::Px(15.0)),
+                    ..Default::default()
+                })
+                .on_click(move || is_modal_open.set(true)),
+        )
+        .child(Show::new(
+            is_modal_open,
+            move || {
+                Box::new(
+                    Portal::new("modal_anchor").child(
+                        UiBox::new()
+                            .surface()
+                            .corner_radius(16.0)
+                            .style(Style {
+                                padding: Thickness::all(Val::Px(40.0)),
+                                position: Position::Absolute,
+                                inset: Thickness {
+                                    left: Val::Px(300.0),
+                                    top: Val::Px(200.0),
+                                    ..Default::default()
+                                },
+                                ..Default::default()
+                            })
+                            .child(Text::new("Men Portalman!").size(28.0))
+                            .child(
+                                Button::new("btn_close_modal")
+                                    .child(Text::new("Yopish").color(Color::WHITE))
+                                    .corner_radius(8.0)
+                                    .style(Style {
+                                        padding: Thickness::all(Val::Px(10.0)),
+                                        margin: Thickness {
+                                            top: Val::Px(20.0),
+                                            ..Default::default()
+                                        },
+                                        ..Default::default()
+                                    })
+                                    .colors(
+                                        Color::hex("#ef4444"),
+                                        Color::hex("#f87171"),
+                                        Color::hex("#dc2626"),
+                                    )
+                                    .on_click(move || is_modal_open.set(false)),
+                            ),
+                    ),
+                )
+            },
+            || Box::new(UiBox::new()),
+        ))
+}
+
+fn build_list_page() -> impl Widget {
+    let list_data = Signal::new(vec![
+        "Rust".to_string(),
+        "WGPU".to_string(),
+        "Taffy".to_string(),
+    ]);
+    UiBox::new()
+        .style(Style {
+            flex_direction: FlexDirection::Column,
+            gap: Size {
+                width: 0.0,
+                height: 20.0,
+            },
+            ..Default::default()
+        })
+        .child(Text::new("Aqlli Ro'yxat (O(1) Diffing)").size(36.0))
+        .child(
+            UiBox::new()
+                .style(Style {
+                    flex_direction: FlexDirection::Row,
+                    gap: Size {
+                        width: 10.0,
+                        height: 0.0,
+                    },
+                    ..Default::default()
+                })
+                .child(
+                    Button::new("btn_add")
+                        .child(Text::new("➕ Element Qo'shish").color(Color::WHITE))
+                        .corner_radius(8.0)
+                        .style(Style {
+                            padding: Thickness::all(Val::Px(10.0)),
+                            ..Default::default()
+                        })
+                        .on_click(move || {
+                            let mut v = list_data.get_untracked();
+                            v.push(format!("Yangi Element #{}", v.len() + 1));
+                            list_data.set(v);
+                        }),
+                ),
+        )
+        .child(ForList::new(list_data, |item| {
+            Box::new(
+                UiBox::new()
+                    .surface()
+                    .corner_radius(8.0)
+                    .style(Style {
+                        padding: Thickness::all(Val::Px(15.0)),
+                        margin: Thickness {
+                            bottom: Val::Px(10.0),
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    })
+                    .child(Text::new(item)),
+            )
+        }))
+}
+
+fn build_async_page() -> impl Widget {
+    let user_profile = create_resource(move || {
+        std::thread::sleep(std::time::Duration::from_secs(3));
+        "Dvigatel yashin tezligida ishlamoqda! UI qotib qolmadi.".to_string()
+    });
+    let loading_width = Signal::new(200.0);
+    let anim_w = create_tween(loading_width, 1.0, Easing::Bounce);
+    let anim_color = create_tween(Signal::new(Color::hex("#3b82f6")), 1.0, Easing::Linear);
+
+    UiBox::new()
+        .style(Style {
+            flex_direction: FlexDirection::Column,
+            gap: Size {
+                width: 0.0,
+                height: 20.0,
+            },
+            align_items: Align::Center,
+            justify_content: Align::Center,
+            height: Val::Percent(100.0),
+            ..Default::default()
+        })
+        .child(
+            Suspense::new(user_profile)
+                .fallback(move || {
+                    loading_width.set(300.0);
+                    Box::new(
+                        AnimatedBox::new("loader", anim_w, anim_color)
+                            .child(Text::new("Kutilmoqda... ⏳").color(Color::WHITE)),
+                    )
+                })
+                .child(|data| {
+                    Box::new(
+                        UiBox::new()
+                            .surface()
+                            .corner_radius(20.0)
+                            .style(Style {
+                                padding: Thickness::all(Val::Px(40.0)),
+                                ..Default::default()
+                            })
+                            .child(Text::new(data).size(20.0)),
+                    )
+                }),
+        )
+}
+
+fn main() {
+    let renderer_factory =
+        move |device: &_, queue: &_, config: &_| -> Box<dyn rore_types::text::TextRenderer> {
+            Box::new(TextSystem::new(device, queue, config))
+        };
+    run(
+        RoreEnterpriseApp {},
+        RoreConfig::desktop(),
+        renderer_factory,
+    );
+}
