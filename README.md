@@ -31,7 +31,7 @@ cargo run --release
  ```
 ### How to use examples.
 1. copy any code from examples folder
-2. paste full code in main.rs
+2. paste full code in sandbox/main.rs
 3. run code
 
 ---
