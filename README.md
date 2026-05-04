@@ -8,7 +8,7 @@
 
 **Rore** is a high-performance, GPU-accelerated UI framework built entirely in Rust. Specially optimized for high-end and heavy desktop application development. Cross-platform performance based on the pixel-first concept.
 
-[📄 **Read the Architectural docs**](docs/WHITEPAPER.md)
+[ **Read the Architectural docs**](docs/WHITEPAPER.md)
 
 ## Why Rore?
 
@@ -28,7 +28,7 @@
 
 ---
 
-## 🟢 What is Working (Core Features)
+##  What is Working (Core Features)
 
 Rore's core has reached a level where it effortlessly handles the most complex operations (e.g., rendering data-grid-style charts at 60 FPS).
 
@@ -51,7 +51,7 @@ Rore's core has reached a level where it effortlessly handles the most complex o
 
 ---
 
-## 🟡 What is Not Working or Being Optimized (WIP)
+##  What is Not Working or Being Optimized (WIP)
 
 While the architecture is highly stable, some system-level adaptations are currently underway:
 
