@@ -13,7 +13,7 @@ glam = "0.25"
 taffy = "0.3.19"
 arboard = "3.3"
 
-# Bizning modullar
+
 rore-types = { path = "../rore-types" }
 rore-render = { path = "../rore-render" }
 rore-layout = { path = "../rore-layout" }
