@@ -1,9 +1,0 @@
-[package]
-name = "rore-types"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-
-glam = "0.25"
-wgpu = "0.19"
