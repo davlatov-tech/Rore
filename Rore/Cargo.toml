@@ -1,0 +1,13 @@
+[workspace]
+resolver = "2"
+
+members = [
+    "rore-types",
+    "rore-render",
+    "rore-layout",
+    "rore-core",
+    "sandbox",
+    "rore-kit",
+    "rore-text",
+    "rore-library",
+]

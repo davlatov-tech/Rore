@@ -1,0 +1,14 @@
+[package]
+name = "rore-layout"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+taffy = { version = "0.10.1", features = ["flexbox", "grid", "std"] }
+
+# Bizning turlar
+rore-types = { path = "../rore-types" }
+
+# Log chiqarish
+log = "0.4"
+glam = "0.25"

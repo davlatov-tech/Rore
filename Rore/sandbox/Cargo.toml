@@ -1,0 +1,18 @@
+[package]
+name = "sandbox"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Faqat Core kerak, qolganini u o'zi hal qiladi
+rore-core = { path = "../rore-core" }
+pollster = "0.3" # Main funksiyani async qilish uchun
+tokio = { version = "1.49.0", features = ["full"] }
+rore-types = { path = "../rore-types" }
+rore-kit = { path = "../rore-kit" }
+rore-text = { path = "../rore-text" }
+glam = "0.25"
+taffy = "0.10.1"
+rore-layout = { path = "../rore-layout" }
+
+rore-library = { path = "../rore-library" } # Papka qayerdaligiga qarab to'g'irlaysiz
